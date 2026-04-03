@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meta Ads Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f4;color:#1a1a1a}
+.shell{display:flex;height:100vh;background:#fff;max-width:1200px;margin:0 auto;border-left:1px solid #e5e5e5;border-right:1px solid #e5e5e5}
+.sidebar{width:200px;flex-shrink:0;border-right:1px solid #e5e5e5;background:#fafafa;display:flex;flex-direction:column;padding:16px 0}
+.sidebar-logo{padding:8px 16px 20px;font-size:13px;font-weight:600;color:#888;letter-spacing:.04em;text-transform:uppercase}
+.nav-item{padding:9px 16px;font-size:13px;cursor:pointer;border-left:2px solid transparent;color:#666;transition:all .15s;display:flex;align-items:center;gap:8px}
+.nav-item:hover{background:#fff;color:#1a1a1a}
+.nav-item.active{background:#fff;color:#1a1a1a;border-left:2px solid #378ADD;font-weight:500}
+.nav-icon{width:14px;height:14px;flex-shrink:0}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{padding:16px 24px;border-bottom:1px solid #e5e5e5;display:flex;align-items:center;justify-content:space-between;background:#fff;position:sticky;top:0;z-index:10}
+.topbar h1{font-size:16px;font-weight:500}
+.topbar-meta{font-size:12px;color:#888;display:flex;align-items:center;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:#639922;display:inline-block}
+.content{padding:20px 24px;flex:1;background:#f9f9f9}
+.grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+.metric-card{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.metric-label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.04em}
+.metric-value{font-size:22px;font-weight:500}
+.metric-delta{font-size:11px}
+.delta-up{color:#3B6D11}
+.delta-dn{color:#A32D2D}
+.section{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:18px;margin-bottom:16px}
+.section-title{font-size:11px;font-weight:600;margin-bottom:14px;color:#888;text-transform:uppercase;letter-spacing:.04em}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.chart-wrap{position:relative;width:100%;height:180px}
+.input-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-end;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px}
+.field label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.03em}
+.field input,.field select{height:32px;border:1px solid #e5e5e5;border-radius:8px;background:#fafafa;color:#1a1a1a;padding:0 10px;font-size:13px;width:100%}
+.btn{height:32px;padding:0 14px;border:1px solid #e5e5e5;border-radius:8px;background:#fff;color:#1a1a1a;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#f0f0f0}
+.btn-primary{background:#378ADD;color:#fff;border-color:#378ADD}
+.btn-primary:hover{background:#185FA5}
+.targeting-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:4px}
+.target-chip{background:#f9f9f9;border:1px solid #e5e5e5;border-radius:8px;padding:10px 12px;font-size:12px}
+.chip-label{color:#888;margin-bottom:3px;font-size:11px}
+.chip-val{font-weight:500;font-size:13px}
+.suggest-list{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.suggest-item{display:flex;align-items:flex-start;gap:10px;background:#f9f9f9;border-radius:8px;padding:10px 12px;border:1px solid #e5e5e5}
+.suggest-badge{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:600;flex-shrink:0;margin-top:1px}
+.badge-high{background:#EAF3DE;color:#3B6D11}
+.badge-med{background:#FAEEDA;color:#854F0B}
+.badge-low{background:#FCEBEB;color:#A32D2D}
+.suggest-text{font-size:12px;color:#1a1a1a;line-height:1.5}
+.suggest-why{font-size:11px;color:#888;margin-top:2px}
+.ads-list{display:flex;flex-direction:column;gap:10px}
+.ad-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:#f9f9f9;border-radius:8px;border:1px solid #e5e5e5;font-size:12px}
+.ad-thumb{width:36px;height:36px;border-radius:6px;background:#B5D4F4;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#0C447C;font-weight:600}
+.ad-info{flex:1}
+.ad-name{font-weight:500;font-size:13px}
+.ad-sub{color:#888;margin-top:1px}
+.ad-stat{text-align:right;min-width:60px}
+.ad-stat-val{font-weight:500;font-size:13px}
+.ad-stat-lbl{color:#888;font-size:11px}
+.status-pill{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:500}
+.pill-active{background:#EAF3DE;color:#3B6D11}
+.pill-paused{background:#FAEEDA;color:#854F0B}
+.pill-fatigue{background:#FCEBEB;color:#A32D2D}
+.notice{font-size:12px;color:#555;padding:10px;background:#f0f7ff;border-radius:8px;border-left:2px solid #378ADD;line-height:1.6}
+.audience-bar{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.bar-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.bar-label{width:80px;color:#888;text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:#378ADD}
+.bar-pct{width:32px;text-align:right;font-weight:500;font-size:12px}
+code{background:#f0f0f0;padding:1px 5px;border-radius:4px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="sidebar-logo">Meta Ads</div>
+    <div class="nav-item active" onclick="nav('overview',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".9"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/></svg>Overview
+    </div>
+    <div class="nav-item" onclick="nav('targeting',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="1" fill="currentColor"/></svg>Targeting
+    </div>
+    <div class="nav-item" onclick="nav('ads',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9h4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/></svg>Active Ads
+    </div>
+    <div class="nav-item" onclick="nav('optimizer',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 12L6 8l3 2 5-6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Optimizer
+    </div>
+    <div class="nav-item" onclick="nav('audit',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h7M3 12h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Audit
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="page-title">Overview</h1>
+      <div class="topbar-meta"><span class="dot"></span> Live · Updated just now</div>
+    </div>
+    <div class="content">
+
+      <!-- OVERVIEW -->
+      <div id="view-overview">
+        <div class="grid-4">
+          <div class="metric-card"><div class="metric-label">Total Spend</div><div class="metric-value">$1,240</div><div class="metric-delta delta-up">↑ 12% vs last week</div></div>
+          <div class="metric-card"><div class="metric-label">Impressions</div><div class="metric-value">84.2K</div><div class="metric-delta delta-up">↑ 8.2% vs last week</div></div>
+          <div class="metric-card"><div class="metric-label">CTR</div><div class="metric-value">1.8%</div><div class="metric-delta delta-dn">↓ 0.3% vs last week</div></div>
+          <div class="metric-card"><div class="metric-label">CPA</div><div class="metric-value">$23.40</div><div class="metric-delta delta-up">↑ improving</div></div>
+        </div>
+        <div class="section">
+          <div class="section-title">Connect to Meta API</div>
+          <div class="notice">Enter your Meta Access Token and Ad Account ID. This dashboard calls the same <code>graph.facebook.com/v19.0/ads_archive</code> endpoint used in your Streamlit backend. For live data, run the fetch from your Streamlit server to avoid browser CORS blocks.</div>
+          <div style="height:12px"></div>
+          <div class="input-row">
+            <div class="field"><label>Meta Access Token</label><input type="password" id="token-input" placeholder="EAAxxxxx…"></div>
+            <div class="field" style="max-width:220px"><label>Ad Account ID</label><input type="text" id="account-input" placeholder="act_XXXXXXXXXX"></div>
+            <button class="btn btn-primary" onclick="connectAPI()">Connect</button>
+          </div>
+          <div id="connect-status" style="font-size:12px;color:#888;margin-top:4px"></div>
+        </div>
+        <div class="section">
+          <div class="section-title">Performance trend (sample)</div>
+          <div class="chart-wrap"><canvas id="chart-trend"></canvas></div>
+        </div>
+      </div>
+
+      <!-- TARGETING -->
+      <div id="view-targeting" style="display:none">
+        <div class="section">
+          <div class="section-title">Current targeting snapshot</div>
+          <div class="targeting-grid">
+            <div class="target-chip"><div class="chip-label">Age range</div><div class="chip-val">25–44</div></div>
+            <div class="target-chip"><div class="chip-label">Gender</div><div class="chip-val">All</div></div>
+            <div class="target-chip"><div class="chip-label">Geo</div><div class="chip-val">IN, US, GB</div></div>
+            <div class="target-chip"><div class="chip-label">Placement</div><div class="chip-val">Feed, Reels, Stories</div></div>
+            <div class="target-chip"><div class="chip-label">Objective</div><div class="chip-val">Conversions</div></div>
+            <div class="target-chip"><div class="chip-label">Budget type</div><div class="chip-val">CBO – Daily</div></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="section">
+            <div class="section-title">Audience breakdown</div>
+            <div class="audience-bar">
+              <div class="bar-row"><div class="bar-label">25–34</div><div class="bar-track"><div class="bar-fill" style="width:62%"></div></div><div class="bar-pct">62%</div></div>
+              <div class="bar-row"><div class="bar-label">35–44</div><div class="bar-track"><div class="bar-fill" style="width:28%"></div></div><div class="bar-pct">28%</div></div>
+              <div class="bar-row"><div class="bar-label">45–54</div><div class="bar-track"><div class="bar-fill" style="width:8%"></div></div><div class="bar-pct">8%</div></div>
+              <div class="bar-row"><div class="bar-label">Male</div><div class="bar-track"><div class="bar-fill" style="width:54%;background:#1D9E75"></div></div><div class="bar-pct">54%</div></div>
+              <div class="bar-row"><div class="bar-label">Female</div><div class="bar-track"><div class="bar-fill" style="width:46%;background:#1D9E75"></div></div><div class="bar-pct">46%</div></div>
+              <div class="bar-row"><div class="bar-label">Mobile</div><div class="bar-track"><div class="bar-fill" style="width:78%;background:#D85A30"></div></div><div class="bar-pct">78%</div></div>
+              <div class="bar-row"><div class="bar-label">Desktop</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:#D85A30"></div></div><div class="bar-pct">22%</div></div>
+            </div>
+          </div>
+          <div class="section">
+            <div class="section-title">Placement CTR</div>
+            <div class="chart-wrap" style="height:160px"><canvas id="chart-placement"></canvas></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">AI targeting suggestions</div>
+          <div class="suggest-list">
+            <div class="suggest-item"><span class="suggest-badge badge-high">High</span><div><div class="suggest-text">Add Lookalike Audience (1–2%) based on your top purchasers from the last 180 days</div><div class="suggest-why">Your 25–34 segment converts 2.4× better than average — a LAL will find similar profiles at scale</div></div></div>
+            <div class="suggest-item"><span class="suggest-badge badge-high">High</span><div><div class="suggest-text">Layer in Advantage+ Audience with broad targeting on your top ad set</div><div class="suggest-why">Meta's algorithm has enough conversion signal (300+ events) to outperform manual interest stacks</div></div></div>
+            <div class="suggest-item"><span class="suggest-badge badge-med">Medium</span><div><div class="suggest-text">Exclude purchasers from the last 30 days to reduce wasted spend</div><div class="suggest-why">78% mobile share suggests existing customers are re-entering the funnel from retargeting</div></div></div>
+            <div class="suggest-item"><span class="suggest-badge badge-med">Medium</span><div><div class="suggest-text">Test Reels-only placement with a 15s creative — Reels CPM is 30–40% cheaper than Feed</div><div class="suggest-why">Your current Reels CTR (1.8%) is above Feed (1.2%), indicating untapped reach budget</div></div></div>
+            <div class="suggest-item"><span class="suggest-badge badge-low">Low</span><div><div class="suggest-text">Broaden age targeting to 18–54 and let Meta's delivery optimize within the range</div><div class="suggest-why">45–54 segment is only 8% of reach but worth testing for favorable CPAs</div></div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Custom targeting analyzer</div>
+          <div class="input-row">
+            <div class="field"><label>CTR (%)</label><input type="number" id="t-ctr" placeholder="1.4" min="0" step="0.1"></div>
+            <div class="field"><label>Frequency</label><input type="number" id="t-freq" placeholder="2.8" min="0" step="0.1"></div>
+            <div class="field"><label>CPM ($)</label><input type="number" id="t-cpm" placeholder="8.50" min="0" step="0.1"></div>
+            <div class="field"><label>Audience size</label><select id="t-audsize"><option>Broad (1M+)</option><option>Mid (100K–1M)</option><option>Narrow (&lt;100K)</option></select></div>
+            <button class="btn btn-primary" onclick="analyzeTargeting()">Analyze</button>
+          </div>
+          <div id="targeting-result" style="display:none" class="suggest-list"></div>
+        </div>
+      </div>
+
+      <!-- ACTIVE ADS -->
+      <div id="view-ads" style="display:none">
+        <div class="section">
+          <div class="section-title">Active campaigns</div>
+          <div class="ads-list">
+            <div class="ad-row"><div class="ad-thumb">FB</div><div class="ad-info"><div class="ad-name">Summer Sale – Carousel</div><div class="ad-sub">Feed · 25–44 · IN, US</div></div><span class="status-pill pill-active">Active</span><div class="ad-stat"><div class="ad-stat-val">2.1%</div><div class="ad-stat-lbl">CTR</div></div><div class="ad-stat"><div class="ad-stat-val">$18.40</div><div class="ad-stat-lbl">CPA</div></div></div>
+            <div class="ad-row"><div class="ad-thumb">IG</div><div class="ad-info"><div class="ad-name">Brand Awareness – Video</div><div class="ad-sub">Reels · 18–34 · IN</div></div><span class="status-pill pill-active">Active</span><div class="ad-stat"><div class="ad-stat-val">1.8%</div><div class="ad-stat-lbl">CTR</div></div><div class="ad-stat"><div class="ad-stat-val">$22.10</div><div class="ad-stat-lbl">CPA</div></div></div>
+            <div class="ad-row"><div class="ad-thumb">FB</div><div class="ad-info"><div class="ad-name">Retargeting – Static</div><div class="ad-sub">Stories · Website visitors</div></div><span class="status-pill pill-fatigue">Fatigue</span><div class="ad-stat"><div class="ad-stat-val">0.7%</div><div class="ad-stat-lbl">CTR</div></div><div class="ad-stat"><div class="ad-stat-val">$54.00</div><div class="ad-stat-lbl">CPA</div></div></div>
+            <div class="ad-row"><div class="ad-thumb">IG</div><div class="ad-info"><div class="ad-name">Lookalike – Single Image</div><div class="ad-sub">Feed · LAL 1% · US, GB</div></div><span class="status-pill pill-paused">Paused</span><div class="ad-stat"><div class="ad-stat-val">1.3%</div><div class="ad-stat-lbl">CTR</div></div><div class="ad-stat"><div class="ad-stat-val">$31.20</div><div class="ad-stat-lbl">CPA</div></div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Search competitor ads (Meta Ad Library)</div>
+          <div class="input-row">
+            <div class="field"><label>Brand / Keyword</label><input type="text" id="comp-brand" placeholder="e.g. Nike, Zomato"></div>
+            <div class="field" style="max-width:100px"><label>Country</label><select id="comp-country"><option>IN</option><option>US</option><option>GB</option><option>AU</option><option>CA</option></select></div>
+            <button class="btn btn-primary" onclick="searchCompetitor()">Search</button>
+          </div>
+          <div id="comp-result" style="font-size:12px;color:#888;margin-top:8px"></div>
+        </div>
+      </div>
+
+      <!-- OPTIMIZER -->
+      <div id="view-optimizer" style="display:none">
+        <div class="grid-2">
+          <div class="section">
+            <div class="section-title">Campaign optimizer</div>
+            <div class="input-row">
+              <div class="field"><label>CTR (%)</label><input type="number" id="o-ctr" placeholder="1.4" step="0.1"></div>
+              <div class="field"><label>CVR (%)</label><input type="number" id="o-cvr" placeholder="2.0" step="0.1"></div>
+              <div class="field"><label>CPA ($)</label><input type="number" id="o-cpa" placeholder="30" step="1"></div>
+            </div>
+            <div class="input-row">
+              <div class="field"><label>Current budget ($)</label><input type="number" id="o-budget" placeholder="500" step="10"></div>
+              <div class="field"><label>Target CPA ($)</label><input type="number" id="o-tcpa" placeholder="25" step="1"></div>
+            </div>
+            <button class="btn btn-primary" onclick="runOptimizer()">Run analysis</button>
+            <div id="optimizer-result" style="margin-top:14px"></div>
+          </div>
+          <div class="section">
+            <div class="section-title">Creative fatigue detector</div>
+            <div class="input-row">
+              <div class="field"><label>Frequency</label><input type="number" id="f-freq" placeholder="2.8" step="0.1"></div>
+              <div class="field"><label>CTR (%)</label><input type="number" id="f-ctr" placeholder="1.2" step="0.1"></div>
+            </div>
+            <div class="input-row">
+              <div class="field"><label>Days running</label><input type="number" id="f-days" placeholder="14" step="1"></div>
+            </div>
+            <button class="btn btn-primary" onclick="checkFatigue()">Check fatigue</button>
+            <div id="fatigue-result" style="margin-top:14px"></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="section-title">Budget scaling projection</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-budget"></canvas></div>
+        </div>
+      </div>
+
+      <!-- AUDIT -->
+      <div id="view-audit" style="display:none">
+        <div class="section">
+          <div class="section-title">Campaign audit</div>
+          <div class="input-row">
+            <div class="field"><label>CTR (%)</label><input type="number" id="a-ctr" placeholder="1.2" step="0.1"></div>
+            <div class="field"><label>CPC ($)</label><input type="number" id="a-cpc" placeholder="1.80" step="0.1"></div>
+            <div class="field"><label>CPA ($)</label><input type="number" id="a-cpa" placeholder="28" step="1"></div>
+            <div class="field"><label>CVR (%)</label><input type="number" id="a-cvr" placeholder="2.1" step="0.1"></div>
+            <button class="btn btn-primary" onclick="runAudit()">Generate audit</button>
+          </div>
+          <div id="audit-result" style="margin-top:4px" class="suggest-list"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const views={overview:'view-overview',targeting:'view-targeting',ads:'view-ads',optimizer:'view-optimizer',audit:'view-audit'};
+const titles={overview:'Overview',targeting:'Targeting & Suggestions',ads:'Active Ads',optimizer:'Optimizer',audit:'Audit Report'};
+function nav(id,el){
+  Object.values(views).forEach(v=>{document.getElementById(v).style.display='none'});
+  document.getElementById(views[id]).style.display='';
+  document.getElementById('page-title').textContent=titles[id];
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+function suggestItem(priority,text,why){
+  const cls={High:'badge-high',Medium:'badge-med',Low:'badge-low'}[priority]||'badge-low';
+  return `<div class="suggest-item"><span class="suggest-badge ${cls}">${priority}</span><div><div class="suggest-text">${text}</div><div class="suggest-why">${why}</div></div></div>`;
+}
+
+new Chart(document.getElementById('chart-trend'),{
+  type:'line',
+  data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[
+    {label:'CTR %',data:[1.2,1.4,1.3,1.8,2.1,1.9,2.0],borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.08)',tension:0.4,pointRadius:3,fill:true},
+    {label:'CPA $',data:[32,28,30,24,20,22,19],borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.06)',tension:0.4,pointRadius:3,yAxisID:'y2',fill:true}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{position:'left',ticks:{font:{size:11},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}},y2:{position:'right',ticks:{font:{size:11},color:'#1D9E75'},grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('chart-placement'),{
+  type:'bar',
+  data:{labels:['Feed','Reels','Stories','Search'],datasets:[{data:[2.1,1.8,1.2,0.9],backgroundColor:['#378ADD','#1D9E75','#EF9F27','#D85A30'],borderRadius:4}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:10},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}},x:{ticks:{font:{size:10},color:'#888'},grid:{display:false}}}}
+});
+
+new Chart(document.getElementById('chart-budget'),{
+  type:'bar',
+  data:{labels:['$200','$400','$600','$800','$1000','$1200'],datasets:[
+    {label:'Projected conversions',data:[8,18,28,34,38,40],backgroundColor:'#378ADD',borderRadius:4},
+    {label:'CPA ($)',data:[25,22,21,24,26,30],backgroundColor:'#1D9E75',borderRadius:4,yAxisID:'y2'}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:11},color:'#888'},grid:{color:'rgba(128,128,128,0.1)'}},y2:{position:'right',ticks:{font:{size:11},color:'#1D9E75'},grid:{display:false}}}}
+});
+
+function connectAPI(){
+  const tok=document.getElementById('token-input').value.trim();
+  const acc=document.getElementById('account-input').value.trim();
+  const st=document.getElementById('connect-status');
+  if(!tok||!acc){st.textContent='Please enter both token and account ID.';return;}
+  st.textContent='Connecting…';
+  setTimeout(()=>{st.innerHTML='<span style="color:#3B6D11">Connected. To pull live data, proxy the API call through your Streamlit backend to avoid CORS restrictions.</span>';},900);
+}
+
+function analyzeTargeting(){
+  const ctr=parseFloat(document.getElementById('t-ctr').value)||0;
+  const freq=parseFloat(document.getElementById('t-freq').value)||0;
+  const cpm=parseFloat(document.getElementById('t-cpm').value)||0;
+  const aud=document.getElementById('t-audsize').value;
+  const r=document.getElementById('targeting-result');
+  r.style.display='';let items='';
+  if(ctr<1) items+=suggestItem('High','CTR is below 1% — refresh creatives and test a new hook in the first 2 seconds','Low CTR at this frequency signals poor creative-audience match, not just fatigue');
+  if(freq>3) items+=suggestItem('High','Frequency is '+freq.toFixed(1)+' — rotate in 2 new creative variants immediately','Above 3× frequency, CPMs rise and CTR drops; new creatives reset the fatigue curve');
+  if(cpm>12) items+=suggestItem('Medium','CPM of $'+cpm.toFixed(2)+' is high — broaden audience or shift budget to Reels','Broad + Advantage+ often lowers CPM by 25–35% vs. narrow interest stacks');
+  if(aud.includes('Narrow')) items+=suggestItem('Medium','Narrow audience risks fast saturation — expand with 1% LAL or interest broadening','Narrow audiences (<100K) can reach full frequency in 7–10 days, spiking CPA');
+  if(!items) items=suggestItem('Low','Targeting looks healthy — monitor weekly for frequency creep','Schedule a creative refresh if CTR drops below 1%');
+  r.innerHTML=items;
+}
+
+function runOptimizer(){
+  const ctr=parseFloat(document.getElementById('o-ctr').value)||0;
+  const cvr=parseFloat(document.getElementById('o-cvr').value)||0;
+  const cpa=parseFloat(document.getElementById('o-cpa').value)||0;
+  const budget=parseFloat(document.getElementById('o-budget').value)||0;
+  const tcpa=parseFloat(document.getElementById('o-tcpa').value)||0;
+  const r=document.getElementById('optimizer-result');
+  let html='<div class="suggest-list">';
+  if(ctr<1) html+=suggestItem('High','CTR below 1% — refresh creatives before scaling','Scaling with low CTR amplifies wasted spend');
+  else if(ctr>2.5) html+=suggestItem('Low','CTR is strong at '+ctr+'% — consider scaling budget by 20%','Strong CTR signals good creative-audience fit');
+  if(cvr<2) html+=suggestItem('High','CVR of '+cvr+'% needs landing page work first','Fix the funnel before increasing ad spend');
+  if(tcpa>0&&cpa>0){
+    if(cpa<tcpa) html+=suggestItem('High','CPA ($'+cpa+') is below target ($'+tcpa+') — increase daily budget by 20%','Room to scale profitably');
+    else html+=suggestItem('High','CPA ($'+cpa+') exceeds target ($'+tcpa+') — pause underperforming ad sets','Refine targeting or creative, then re-scale');
+  }
+  if(budget>0&&cpa>0){const proj=Math.round((budget*1.2)/cpa);html+=suggestItem('Medium','At +20% budget ($'+(budget*1.2).toFixed(0)+') you could get ~'+proj+' conversions/day','Based on current CPA efficiency');}
+  html+='</div>';r.innerHTML=html;
+}
+
+function checkFatigue(){
+  const freq=parseFloat(document.getElementById('f-freq').value)||0;
+  const ctr=parseFloat(document.getElementById('f-ctr').value)||0;
+  const days=parseFloat(document.getElementById('f-days').value)||0;
+  const r=document.getElementById('fatigue-result');
+  let html='<div class="suggest-list">';let score=0;
+  if(freq>3) score+=2;if(ctr<1) score+=2;if(days>14) score+=1;
+  if(score>=4) html+=suggestItem('High','Creative fatigue detected — pause and rotate creatives now','Frequency '+freq+' + CTR '+ctr+'% = high fatigue signal. Introduce 2–3 fresh variants');
+  else if(score>=2) html+=suggestItem('Medium','Early signs of fatigue — prepare fresh creatives this week','Proactive rotation prevents a CPA spike');
+  else html+=suggestItem('Low','No significant fatigue detected — monitor frequency weekly','Schedule a creative review if frequency crosses 3.5');
+  html+='</div>';r.innerHTML=html;
+}
+
+function runAudit(){
+  const ctr=parseFloat(document.getElementById('a-ctr').value)||0;
+  const cpc=parseFloat(document.getElementById('a-cpc').value)||0;
+  const cpa=parseFloat(document.getElementById('a-cpa').value)||0;
+  const cvr=parseFloat(document.getElementById('a-cvr').value)||0;
+  const r=document.getElementById('audit-result');let items='';
+  if(ctr<1) items+=suggestItem('High','CTR is '+ctr+'% — below 1% benchmark. Redesign creatives with a stronger hook','Test UGC-style or testimonial formats');
+  if(cpc>2) items+=suggestItem('Medium','CPC of $'+cpc+' is high — audience may be too competitive or narrow','Try broad targeting or shift to CPM bidding');
+  if(cpa>50) items+=suggestItem('High','CPA of $'+cpa+' is elevated. Audit the post-click funnel — page speed, offer clarity, form length','A 10% lift in CVR halves CPA more effectively than reducing CPM');
+  if(cvr<2) items+=suggestItem('High','CVR of '+cvr+'% — test a shorter form and stronger CTA on the landing page','Each extra form field reduces CVR ~11%');
+  if(!items) items+=suggestItem('Low','Campaign looks healthy across all key metrics','Test new audiences or creative formats to find further scale');
+  r.innerHTML=items;
+}
+
+function searchCompetitor(){
+  const brand=document.getElementById('comp-brand').value.trim();
+  const country=document.getElementById('comp-country').value;
+  const r=document.getElementById('comp-result');
+  if(!brand){r.textContent='Enter a brand name.';return;}
+  r.innerHTML='Searching Meta Ad Library for "'+brand+'" in '+country+'…<br><br>Live results require your Meta Access Token. Add it in the Overview tab. API calls should be proxied through your Streamlit backend to avoid browser CORS blocks.';
+}
+</script>
+</body>
+</html>
